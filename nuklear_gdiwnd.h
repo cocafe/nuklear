@@ -110,6 +110,11 @@ static inline struct nk_context *nkgdi_window_nkctx_get(struct nkgdi_window *wnd
         return wnd->_internal.nk_ctx;
 }
 
+static inline HWND nkgdi_window_hwnd_get(struct nkgdi_window *wnd)
+{
+        return wnd->_internal.window_handle;
+}
+
 int nkgdi_window_create(struct nkgdi_window* wnd, unsigned int width, unsigned int height, const char* name, int posX, int posY)
 {
     DWORD styleEx = WS_EX_WINDOWEDGE;
