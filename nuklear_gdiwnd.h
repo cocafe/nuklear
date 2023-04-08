@@ -4,6 +4,7 @@
 #define NK_GDI_WINDOW_CLS L"WNDCLS_NkGdi"
 
 #include <windows.h>
+#include <winuser.h>
 
 struct nkgdi_window;
 
@@ -36,6 +37,8 @@ struct nkgdi_window
     /* Internal Data */
     struct
     {
+        void *userdata;
+
         /* Window handle */
         HWND window_handle;
 
@@ -113,6 +116,16 @@ static inline struct nk_context *nkgdi_window_nkctx_get(struct nkgdi_window *wnd
 static inline HWND nkgdi_window_hwnd_get(struct nkgdi_window *wnd)
 {
         return wnd->_internal.window_handle;
+}
+
+static inline void nkgdi_window_userdata_set(struct nkgdi_window *wnd, void *userdata)
+{
+        wnd->_internal.userdata = userdata;
+}
+
+static inline void *nkgdi_window_userdata_get(struct nkgdi_window *wnd)
+{
+        return wnd->_internal.userdata;
 }
 
 int nkgdi_window_create(struct nkgdi_window* wnd, unsigned int width, unsigned int height, const char* name, int posX, int posY)
