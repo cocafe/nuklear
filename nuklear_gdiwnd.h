@@ -9,7 +9,7 @@
 struct nkgdi_window;
 
 /* Functin pointer types for window callbacks */
-typedef int(*nkgdi_window_func_close)(void);
+typedef int(*nkgdi_window_func_close)(struct nkgdi_window *);
 typedef int(*nkgdi_window_func_draw)(struct nkgdi_window *, struct nk_context*);
 
 /* Window container / context */
@@ -248,7 +248,7 @@ int nkgdi_window_update(struct nkgdi_window* wnd)
         else
         {
             /* Nuklear window was closed. Handle close internally */
-            if(!wnd->cb_on_close || wnd->cb_on_close())
+            if(!wnd->cb_on_close || wnd->cb_on_close(wnd))
                 wnd->_internal.is_open = 0;
         }
         nk_end(wnd->_internal.nk_ctx);
@@ -295,7 +295,7 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
         /* Window close event */
         case WM_CLOSE:
             /* Call custom close callback */
-            if(!nkwnd->cb_on_close || nkwnd->cb_on_close())
+            if(!nkwnd->cb_on_close || nkwnd->cb_on_close(nkwnd))
                 nkwnd->_internal.is_open = 0;
             return 0; /* No default behaviour. We do it our own way */
 
