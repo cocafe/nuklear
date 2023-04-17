@@ -40,6 +40,7 @@ struct nkgdi_window {
 
                 /* Window handle */
                 HWND window_handle;
+                HICON icon;
 
                 /* Nuklear & GDI context */
                 nk_gdi_ctx nk_gdi_ctx;
@@ -194,12 +195,19 @@ void nkgdi_window_destroy(struct nkgdi_window *wnd)
         if (wnd->_internal.nk_gdi_ctx) {
                 nk_gdi_shutdown(wnd->_internal.nk_gdi_ctx);
         }
+
         if (wnd->_internal.gdi_font) {
                 nk_gdifont_del(wnd->_internal.gdi_font);
         }
+
         if (wnd->_internal.window_dc) {
                 ReleaseDC(wnd->_internal.window_handle, wnd->_internal.window_dc);
         }
+
+        if (wnd->_internal.icon) {
+                DestroyIcon(wnd->_internal.icon);
+        }
+
         if (wnd->_internal.window_handle) {
                 CloseWindow(wnd->_internal.window_handle);
                 DestroyWindow(wnd->_internal.window_handle);
@@ -435,6 +443,19 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
 
         /* In case we reach this line our code and nuklear did not respond to the message. Allow windows to handle it s*/
         return DefWindowProc(wnd, msg, wParam, lParam);
+}
+
+static inline void nkgdi_window_icon_set(struct nkgdi_window *wnd, HICON hicon)
+{
+        HWND hwnd = nkgdi_window_hwnd_get(wnd);
+
+        if (wnd->_internal.icon)
+                DestroyIcon(wnd->_internal.icon);
+
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hicon);
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hicon);
+
+        wnd->_internal.icon = hicon;
 }
 
 static inline void nkgdi_window_set_center(struct nkgdi_window *wnd)
