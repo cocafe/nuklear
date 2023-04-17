@@ -295,15 +295,14 @@ void *nkgdi_window_periodic_updater(void *data)
                 if (!wnd->_internal.is_open)
                         break;
 
+                Sleep(1000 / NKGDI_WND_UPDATE_HZ);
+
 #ifdef NKGDI_UPDATE_FOREGROUND_ONLY
                 if (GetForegroundWindow() != hwnd)
-                        goto sleep;
+                        continue;
 #endif
 
                 PostMessage(hwnd, WM_NKGDI_WND_UPDATE, WM_NKGDI_WND_MAGIC, 0);
-
-sleep:
-                Sleep(1000 / NKGDI_WND_UPDATE_HZ);
         }
 
         pthread_exit(NULL);
