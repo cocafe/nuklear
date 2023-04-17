@@ -29735,6 +29735,8 @@ static inline void nk_set_style(struct nk_context *ctx, enum nk_theme theme)
     }
 }
 
+#include "nuklear_jj.h"
+
 #endif /* NK_IMPLEMENTATION */
 
 /*
