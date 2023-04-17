@@ -437,5 +437,22 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
         return DefWindowProc(wnd, msg, wParam, lParam);
 }
 
+static inline void nkgdi_window_set_center(struct nkgdi_window *wnd)
+{
+        HWND hwnd = nkgdi_window_hwnd_get(wnd);
+        HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+        MONITORINFO monitorInfo;
+
+        monitorInfo.cbSize = sizeof(MONITORINFO);
+        if (GetMonitorInfoW(monitor, &monitorInfo)) {
+                SetWindowPos(nkgdi_window_hwnd_get(wnd),
+                             NULL,
+                             abs(monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left - wnd->_internal.width) / 2,
+                             abs(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top - wnd->_internal.height) / 2,
+                             0, 0,
+                             SWP_NOSIZE | SWP_NOZORDER);
+        }
+}
+
 #endif
 #endif
