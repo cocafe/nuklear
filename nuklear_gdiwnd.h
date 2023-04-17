@@ -1,10 +1,17 @@
 #ifndef NK_GDI_WINDOW
 #define NK_GDI_WINDOW
 
-#define NK_GDI_WINDOW_CLS L"WNDCLS_NkGdi"
+#define NK_GDI_WINDOW_CLS               L"WNDCLS_NkGdi"
 
 #include <windows.h>
 #include <winuser.h>
+
+#ifndef NKGDI_WND_UPDATE_HZ
+#define NKGDI_WND_UPDATE_HZ             (60)
+#endif
+
+#define WM_NKGDI_WND_UPDATE             (WM_USER + 60)
+#define WM_NKGDI_WND_MAGIC              (0xc0cacac0)
 
 struct nkgdi_window;
 
@@ -214,13 +221,10 @@ void nkgdi_window_destroy(struct nkgdi_window *wnd)
         }
 }
 
-void _nkgdi_window_update(struct nkgdi_window *wnd, int draw_cnt)
+void _nkgdi_window_update(struct nkgdi_window *wnd)
 {
         /* To setup the nuklear window we need the windows title */
         char title[256];
-
-        if (draw_cnt <= 0)
-                draw_cnt = 1;
 
         GetWindowTextA(wnd->_internal.window_handle, title, sizeof(title));
 
@@ -231,37 +235,35 @@ void _nkgdi_window_update(struct nkgdi_window *wnd, int draw_cnt)
         if (!wnd->_internal.is_maximized && wnd->allow_sizing)
                 window_flags |= NK_WINDOW_SCALABLE;
 
-        while (wnd->_internal.is_open && draw_cnt-- > 0) {
-                /* Override the nuklear windows size when required */
-                if (wnd->_internal.ws_override)
-                        nk_window_set_bounds(wnd->_internal.nk_ctx, title,
-                                             nk_rect(0, 0, wnd->_internal.width, wnd->_internal.height));
+        /* Override the nuklear windows size when required */
+        if (wnd->_internal.ws_override)
+                nk_window_set_bounds(wnd->_internal.nk_ctx, title,
+                                     nk_rect(0, 0, wnd->_internal.width, wnd->_internal.height));
 
-                /* Start the nuklear window */
-                if (nk_begin(wnd->_internal.nk_ctx, title, nk_rect(0, 0, wnd->_internal.width, wnd->_internal.height),
-                             window_flags)) {
-                        /* Call user drawing callback */
-                        if (wnd->cb_on_draw && !wnd->cb_on_draw(wnd, wnd->_internal.nk_ctx))
-                                wnd->_internal.is_open = 0;
+        /* Start the nuklear window */
+        if (nk_begin(wnd->_internal.nk_ctx, title, nk_rect(0, 0, wnd->_internal.width, wnd->_internal.height),
+                     window_flags)) {
+                /* Call user drawing callback */
+                if (wnd->cb_on_draw && !wnd->cb_on_draw(wnd, wnd->_internal.nk_ctx))
+                        wnd->_internal.is_open = 0;
 
-                        /* Update the windows window to reflect the nuklear windows size */
-                        struct nk_rect bounds = nk_window_get_bounds(wnd->_internal.nk_ctx);
-                        if (bounds.w != wnd->_internal.width || bounds.h != wnd->_internal.height)
-                                SetWindowPos(wnd->_internal.window_handle, NULL, 0, 0, bounds.w, bounds.h,
-                                             SWP_NOMOVE | SWP_NOOWNERZORDER);
-                } else {
-                        /* Nuklear window was closed. Handle close internally */
-                        if (!wnd->cb_on_close || wnd->cb_on_close(wnd))
-                                wnd->_internal.is_open = 0;
-                }
-                nk_end(wnd->_internal.nk_ctx);
-
-                /* We no longer need the window size override flag to be set */
-                wnd->_internal.ws_override = 0;
-
-                /* Pass context to the nuklear gdi renderer */
-                nk_gdi_render(wnd->_internal.nk_gdi_ctx, nk_rgb(0, 0, 0));
+                /* Update the windows window to reflect the nuklear windows size */
+                struct nk_rect bounds = nk_window_get_bounds(wnd->_internal.nk_ctx);
+                if (bounds.w != wnd->_internal.width || bounds.h != wnd->_internal.height)
+                        SetWindowPos(wnd->_internal.window_handle, NULL, 0, 0, bounds.w, bounds.h,
+                                     SWP_NOMOVE | SWP_NOOWNERZORDER);
+        } else {
+                /* Nuklear window was closed. Handle close internally */
+                if (!wnd->cb_on_close || wnd->cb_on_close(wnd))
+                        wnd->_internal.is_open = 0;
         }
+        nk_end(wnd->_internal.nk_ctx);
+
+        /* We no longer need the window size override flag to be set */
+        wnd->_internal.ws_override = 0;
+
+        /* Pass context to the nuklear gdi renderer */
+        nk_gdi_render(wnd->_internal.nk_gdi_ctx, nk_rgb(0, 0, 0));
 }
 
 // Non-blocking update, need to call in a loop outside
@@ -278,29 +280,59 @@ int nkgdi_window_peek_update(struct nkgdi_window *wnd)
                 }
                 nk_input_end(wnd->_internal.nk_ctx);
 
-                _nkgdi_window_update(wnd, 1);
+                _nkgdi_window_update(wnd);
         }
 
         return wnd->_internal.is_open;
 }
 
+void *nkgdi_window_periodic_updater(void *data)
+{
+        struct nkgdi_window *wnd = data;
+        HWND hwnd = wnd->_internal.window_handle;
+
+        while (1) {
+                if (!wnd->_internal.is_open)
+                        break;
+
+#ifdef NKGDI_UPDATE_FOREGROUND_ONLY
+                if (GetForegroundWindow() != hwnd)
+                        goto sleep;
+#endif
+
+                PostMessage(hwnd, WM_NKGDI_WND_UPDATE, WM_NKGDI_WND_MAGIC, 0);
+
+sleep:
+                Sleep(1000 / NKGDI_WND_UPDATE_HZ);
+        }
+
+        pthread_exit(NULL);
+        return NULL;
+}
+
 // Blocking update
 void nkgdi_window_blocking_update(struct nkgdi_window *wnd)
 {
+        pthread_t periodic_updater;
         MSG msg;
 
-        // FIXME: input a event to issue periodic update?
+        if (pthread_create(&periodic_updater, NULL, nkgdi_window_periodic_updater, wnd))
+                periodic_updater = 0;
+
         while (GetMessage(&msg, wnd->_internal.window_handle, 0, 0)) {
                 nk_input_begin(wnd->_internal.nk_ctx);
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
                 nk_input_end(wnd->_internal.nk_ctx);
 
-                _nkgdi_window_update(wnd, 2);
+                _nkgdi_window_update(wnd);
 
                 if (!wnd->_internal.is_open)
                         break;
         }
+
+        if (periodic_updater)
+                pthread_join(periodic_updater, NULL);
 }
 
 inline int nkgdi_window_update(struct nkgdi_window *wnd)
