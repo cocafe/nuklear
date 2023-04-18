@@ -32,6 +32,8 @@ struct nkgdi_window {
         int has_titlebar;
 
         char *font_name;
+        int font_size;
+        int font_weight; // FW_NORMAL/FW_BOLD/etc
 
         /* Callbacks */
         /* Called when the user or os requests a window close (return 1 to accept the reqest)*/
@@ -175,7 +177,9 @@ int nkgdi_window_create(struct nkgdi_window *wnd, unsigned int width, unsigned i
         wnd->_internal.window_dc = GetWindowDC(wnd->_internal.window_handle);
 
         /* Create the gdi font required to draw text */
-        wnd->_internal.gdi_font = nk_gdifont_create(wnd->font_name ? wnd->font_name : "Arial", 16);
+        wnd->_internal.gdi_font = nk_gdifont_create(wnd->font_name ? wnd->font_name : "Arial",
+                                                    wnd->font_size > 0 ? wnd->font_size : 16,
+                                                    wnd->font_weight >= 0 ? wnd->font_weight : FW_NORMAL);
         if (!wnd->_internal.gdi_font)
                 return -1;
 
