@@ -244,8 +244,11 @@ void _nkgdi_window_update(struct nkgdi_window *wnd)
         if (nk_begin(wnd->_internal.nk_ctx, title, nk_rect(0, 0, wnd->_internal.width, wnd->_internal.height),
                      window_flags)) {
                 /* Call user drawing callback */
-                if (wnd->cb_on_draw && !wnd->cb_on_draw(wnd, wnd->_internal.nk_ctx))
+                if (wnd->cb_on_draw && !wnd->cb_on_draw(wnd, wnd->_internal.nk_ctx)) {
                         wnd->_internal.is_open = 0;
+                        if (wnd->cb_on_close)
+                                wnd->cb_on_close(wnd);
+                }
 
                 /* Update the windows window to reflect the nuklear windows size */
                 struct nk_rect bounds = nk_window_get_bounds(wnd->_internal.nk_ctx);
