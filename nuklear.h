@@ -29598,8 +29598,6 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 }
 #endif
 
-#include "nuklear_jj.h"
-
 #endif /* NK_IMPLEMENTATION */
 
 /*
