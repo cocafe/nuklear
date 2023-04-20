@@ -2,6 +2,7 @@
 #define __NUKLEAR_JJ_H__
 
 enum nk_theme {
+        THEME_DEFAULT,
         THEME_BLACK,
         THEME_WHITE,
         THEME_RED,
