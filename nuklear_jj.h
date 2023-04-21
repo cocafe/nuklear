@@ -13,12 +13,47 @@ enum nk_theme {
         THEME_DRACULA,
         THEME_DARK,
         THEME_GRUVBOX,
+        THEME_SOLARIZED_LIGHT,
+        THEME_SOLARIZED_DARK,
         NUM_NK_THEMES,
 };
+
+static struct nk_style_button themed_disabled_btn_style;
+static struct nk_style_button default_disabled_btn_style = {
+        .normal = { .type = NK_STYLE_ITEM_COLOR, .data.color = {40, 40, 40, 255} },
+        .hover = { .type = NK_STYLE_ITEM_COLOR, .data.color = {40, 40, 40, 255} },
+        .active = { .type = NK_STYLE_ITEM_COLOR, .data.color = {40, 40, 40, 255} },
+        .border_color = { 60, 60, 60, 255 },
+        .text_background = { 60, 60, 60, 255 },
+        .text_normal = { 60, 60, 60, 255 },
+        .text_hover = { 60, 60, 60, 255 },
+        .text_active = { 60, 60, 60, 255 },
+};
+
+static struct nk_style_button *disabled_btn_style = &default_disabled_btn_style;
+
+static inline void disabled_btn_style_set(struct nk_color body, struct nk_color border, struct nk_color text)
+{
+        struct nk_style_button style = {
+                .normal = { .type = NK_STYLE_ITEM_COLOR, .data.color = body },
+                .hover = { .type = NK_STYLE_ITEM_COLOR, .data.color = body },
+                .active = { .type = NK_STYLE_ITEM_COLOR, .data.color = body },
+                .border_color = border,
+                .text_background = text,
+                .text_normal = text,
+                .text_hover = text,
+                .text_active = text,
+        };
+
+        memcpy(&themed_disabled_btn_style, &style, sizeof(themed_disabled_btn_style));
+}
 
 static inline void nk_set_style(struct nk_context *ctx, enum nk_theme theme)
 {
         struct nk_color table[NK_COLOR_COUNT];
+
+        memcpy(&themed_disabled_btn_style, &default_disabled_btn_style, sizeof(struct nk_style_button));
+        disabled_btn_style = &default_disabled_btn_style;
 
         switch (theme) {
         case THEME_BLACK:
@@ -305,11 +340,75 @@ static inline void nk_set_style(struct nk_context *ctx, enum nk_theme theme)
                 table[NK_COLOR_TAB_HEADER] = nk_rgb_hex("#104b5b");
                 break;
 
+        case THEME_SOLARIZED_LIGHT:
+                table[NK_COLOR_TEXT] = nk_rgba(101, 123, 131, 255);
+                table[NK_COLOR_WINDOW] = nk_rgba(253, 246, 227, 255);
+                table[NK_COLOR_HEADER] = nk_rgba(216, 210, 195, 255);
+                table[NK_COLOR_BORDER] = nk_rgba(111, 109, 102, 255);
+                table[NK_COLOR_BUTTON] = nk_rgba(211, 202, 166, 255);
+                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(181, 137, 0, 255);
+                table[NK_COLOR_TOGGLE] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(221, 217, 205, 255);
+                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_SELECT] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_SLIDER] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(181, 137, 0, 255);
+                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_PROPERTY] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_EDIT] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_COMBO] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_CHART] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_CHART_COLOR] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(181, 137, 0, 255);
+                table[NK_COLOR_SCROLLBAR] = nk_rgba(238, 232, 213, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(221, 217, 205, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(221, 202, 142, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(181, 137, 0, 255);
+                table[NK_COLOR_TAB_HEADER] = nk_rgba(238, 232, 213, 255);
+                disabled_btn_style_set(table[NK_COLOR_TAB_HEADER], table[NK_COLOR_BORDER], table[NK_COLOR_TEXT]);
+                break;
+
+        case THEME_SOLARIZED_DARK:
+                table[NK_COLOR_TEXT] = nk_rgba(204, 204, 204, 255);
+                table[NK_COLOR_WINDOW] = nk_rgba(0, 43, 54, 255);
+                table[NK_COLOR_HEADER] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_BORDER] = nk_rgba(25, 40, 43, 255);
+                table[NK_COLOR_BUTTON] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(33, 89, 109, 255);
+                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_TOGGLE] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(33, 89, 109, 255);
+                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_SELECT] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_SLIDER] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(33, 89, 109, 255);
+                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_PROPERTY] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_EDIT] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_COMBO] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_CHART] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_CHART_COLOR] = nk_rgba(33, 89, 109, 255);
+                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_SCROLLBAR] = nk_rgba(7, 54, 66, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(33, 89, 109, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(28, 98, 201, 255);
+                table[NK_COLOR_TAB_HEADER] = nk_rgba(7, 54, 66, 255);
+                break;
+
         default:
                 return;
         }
 
         nk_style_from_table(ctx, table);
+        disabled_btn_style = &themed_disabled_btn_style;
 }
 
 NK_API void nk_widget_tooltip(struct nk_context *ctx, const char *tooltip)
@@ -325,15 +424,15 @@ NK_API nk_bool nk_button_label_disabled(struct nk_context *ctx, const char *titl
         struct nk_style_button t = ctx->style.button;
         nk_bool ret;
 
-        if (disabled) {
-                ctx->style.button.normal = nk_style_item_color(nk_rgb(40,40,40));
-                ctx->style.button.hover = nk_style_item_color(nk_rgb(40,40,40));
-                ctx->style.button.active = nk_style_item_color(nk_rgb(40,40,40));
-                ctx->style.button.border_color = nk_rgb(60,60,60);
-                ctx->style.button.text_background = nk_rgb(60,60,60);
-                ctx->style.button.text_normal = nk_rgb(60,60,60);
-                ctx->style.button.text_hover = nk_rgb(60,60,60);
-                ctx->style.button.text_active = nk_rgb(60,60,60);;
+        if (disabled && disabled_btn_style) {
+                ctx->style.button.normal = disabled_btn_style->normal;
+                ctx->style.button.hover = disabled_btn_style->hover;
+                ctx->style.button.active = disabled_btn_style->active;
+                ctx->style.button.border_color = disabled_btn_style->border_color;
+                ctx->style.button.text_background = disabled_btn_style->text_background;
+                ctx->style.button.text_normal = disabled_btn_style->text_normal;
+                ctx->style.button.text_hover = disabled_btn_style->text_hover;
+                ctx->style.button.text_active = disabled_btn_style->text_active;
         }
 
         ret = nk_button_label(ctx, title);
