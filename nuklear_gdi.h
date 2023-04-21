@@ -237,7 +237,7 @@ nk_gdi_set_vertexColor(PTRIVERTEX tri, struct nk_color col)
     tri->Red = col.r << 8;
     tri->Green = col.g << 8;
     tri->Blue = col.b << 8;
-    tri->Alpha = 0xff << 8;
+    tri->Alpha = col.a << 8;
 }
 
 static void

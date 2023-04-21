@@ -28513,7 +28513,6 @@ nk_draw_color_picker(struct nk_command_buffer *o, const struct nk_rect *matrix,
 {
     NK_STORAGE const struct nk_color black = {0,0,0,255};
     NK_STORAGE const struct nk_color white = {255, 255, 255, 255};
-    NK_STORAGE const struct nk_color black_trans = {0,0,0,0};
 
     const float crosshair_size = 7.0f;
     struct nk_color temp;
@@ -28553,8 +28552,14 @@ nk_draw_color_picker(struct nk_command_buffer *o, const struct nk_rect *matrix,
 
     /* draw color matrix */
     temp = nk_hsv_f(hsva[0], 1.0f, 1.0f);
-    nk_fill_rect_multi_color(o, *matrix, white, temp, temp, white);
-    nk_fill_rect_multi_color(o, *matrix, black_trans, black_trans, black, black);
+#if 0
+    {
+        NK_STORAGE const struct nk_color black_trans = {0,0,0,0};
+        nk_fill_rect_multi_color(o, *matrix, white, temp, temp, white);
+        nk_fill_rect_multi_color(o, *matrix, black_trans, black_trans, black, black);
+    }
+#endif
+    nk_fill_rect_multi_color(o, *matrix, white, temp, black, black);
 
     /* draw cross-hair */
     {struct nk_vec2 p; float S = hsva[1]; float V = hsva[2];
