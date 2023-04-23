@@ -376,7 +376,7 @@ static inline void nk_set_style(struct nk_context *ctx, enum nk_theme theme)
                 table[NK_COLOR_TEXT] = nk_rgba(204, 204, 204, 255);
                 table[NK_COLOR_WINDOW] = nk_rgba(0, 43, 54, 255);
                 table[NK_COLOR_HEADER] = nk_rgba(7, 54, 66, 255);
-                table[NK_COLOR_BORDER] = nk_rgba(25, 40, 43, 255);
+                table[NK_COLOR_BORDER] = nk_rgba(0, 0, 0, 255);
                 table[NK_COLOR_BUTTON] = nk_rgba(7, 54, 66, 255);
                 table[NK_COLOR_BUTTON_HOVER] = nk_rgba(33, 89, 109, 255);
                 table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(28, 98, 201, 255);
