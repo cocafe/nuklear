@@ -28247,6 +28247,9 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
     float range;
     float ratio;
 
+    float point_sz = 6.0f;
+    float line_sz = 1.5f;
+
     NK_ASSERT(slot >= 0 && slot < NK_CHART_MAX_SLOT);
     step = g->w / (float)g->slots[slot].count;
     range = g->slots[slot].max - g->slots[slot].min;
@@ -28259,11 +28262,11 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
 
         bounds.x = g->slots[slot].last.x - 2;
         bounds.y = g->slots[slot].last.y - 2;
-        bounds.w = bounds.h = 4;
+        bounds.w = bounds.h = point_sz;
 
         color = g->slots[slot].color;
         if (!(layout->flags & NK_WINDOW_ROM) &&
-            NK_INBOX(i->mouse.pos.x,i->mouse.pos.y, g->slots[slot].last.x-3, g->slots[slot].last.y-3, 6, 6)){
+            NK_INBOX(i->mouse.pos.x,i->mouse.pos.y, g->slots[slot].last.x-3, g->slots[slot].last.y-3, point_sz, point_sz)){
             ret = nk_input_is_mouse_hovering_rect(i, bounds) ? NK_CHART_HOVERING : 0;
             ret |= (i->mouse.buttons[NK_BUTTON_LEFT].down &&
                 i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
@@ -28278,11 +28281,11 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
     color = g->slots[slot].color;
     cur.x = g->x + (float)(step * (float)g->slots[slot].index);
     cur.y = (g->y + g->h) - (ratio * (float)g->h);
-    nk_stroke_line(out, g->slots[slot].last.x, g->slots[slot].last.y, cur.x, cur.y, 1.0f, color);
+    nk_stroke_line(out, g->slots[slot].last.x, g->slots[slot].last.y, cur.x, cur.y, line_sz, color);
 
     bounds.x = cur.x - 3;
     bounds.y = cur.y - 3;
-    bounds.w = bounds.h = 6;
+    bounds.w = bounds.h = point_sz;
 
     /* user selection of current data point */
     if (!(layout->flags & NK_WINDOW_ROM)) {
@@ -28293,7 +28296,7 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
             color = g->slots[slot].highlight;
         }
     }
-    nk_fill_rect(out, nk_rect(cur.x - 2, cur.y - 2, 4, 4), 0, color);
+    nk_fill_rect(out, nk_rect(cur.x - 2, cur.y - 2, point_sz, point_sz), 0, color);
 
     /* save current data point position */
     g->slots[slot].last.x = cur.x;
