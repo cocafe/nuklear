@@ -27935,8 +27935,8 @@ nk_property_variant_double(double value, double min_value, double max_value,
     return result;
 }
 NK_LIB void
-nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant,
-    float inc_per_pixel, const enum nk_property_filter filter)
+__nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant,
+    float inc_per_pixel, const enum nk_property_filter filter, int show_label)
 {
     struct nk_window *win;
     struct nk_panel *layout;
@@ -28002,7 +28002,7 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
     ctx->text_edit.clip = ctx->clip;
     in = ((s == NK_WIDGET_ROM && !win->property.active) ||
         layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
-    nk_do_property(&ctx->last_widget_state, &win->buffer, bounds, name,
+    nk_do_property(&ctx->last_widget_state, &win->buffer, bounds, show_label ? name : "",
         variant, inc_per_pixel, buffer, len, state, cursor, select_begin,
         select_end, &style->property, filter, in, style->font, &ctx->text_edit,
         ctx->button_behavior);
@@ -28034,6 +28034,12 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
         win->property.active = 0;
     }
 }
+NK_LIB void
+nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant *variant,
+    float inc_per_pixel, const enum nk_property_filter filter)
+{
+    __nk_property(ctx, name, variant, inc_per_pixel, filter, 1);
+}
 NK_API void
 nk_property_int(struct nk_context *ctx, const char *name,
     int min, int *val, int max, int step, float inc_per_pixel)
@@ -28046,6 +28052,20 @@ nk_property_int(struct nk_context *ctx, const char *name,
     if (!ctx || !ctx->current || !name || !val) return;
     variant = nk_property_variant_int(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_INT);
+    *val = variant.value.i;
+}
+NK_API void
+nk_property_int_nolabel(struct nk_context *ctx, const char *name,
+    int min, int *val, int max, int step, float inc_per_pixel)
+{
+    struct nk_property_variant variant;
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(val);
+
+    if (!ctx || !ctx->current || !name || !val) return;
+    variant = nk_property_variant_int(*val, min, max, step);
+    __nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_INT, 0);
     *val = variant.value.i;
 }
 NK_API void
