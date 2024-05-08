@@ -31,6 +31,8 @@ struct nkgdi_window {
         /* The window will render it's title bar */
         int has_titlebar;
 
+        int always_on_top;
+
         char *font_name;
         int font_size;
         int font_weight; // FW_NORMAL/FW_BOLD/etc
@@ -168,10 +170,15 @@ int nkgdi_window_create(struct nkgdi_window *wnd, unsigned int width, unsigned i
                 NULL, NULL,
                 GetModuleHandleW(NULL),
                 wnd
-                                                      );
+                );
 
         /* Give the window the ascii char name */
         SetWindowTextA(wnd->_internal.window_handle, name);
+
+        SetWindowPos(wnd->_internal.window_handle,
+                     wnd->always_on_top ? HWND_TOPMOST : NULL,
+                     0, 0, cr.right - cr.left, cr.bottom - cr.top,
+                     SWP_NOMOVE | SWP_NOOWNERZORDER);
 
         /* Extract the window dc for gdi drawing */
         wnd->_internal.window_dc = GetWindowDC(wnd->_internal.window_handle);
@@ -257,7 +264,9 @@ void _nkgdi_window_update(struct nkgdi_window *wnd)
                 /* Update the windows window to reflect the nuklear windows size */
                 struct nk_rect bounds = nk_window_get_bounds(wnd->_internal.nk_ctx);
                 if (bounds.w != wnd->_internal.width || bounds.h != wnd->_internal.height)
-                        SetWindowPos(wnd->_internal.window_handle, NULL, 0, 0, bounds.w, bounds.h,
+                        SetWindowPos(wnd->_internal.window_handle,
+                                     wnd->always_on_top ? HWND_TOPMOST : NULL,
+                                     0, 0, bounds.w, bounds.h,
                                      SWP_NOMOVE | SWP_NOOWNERZORDER);
         } else {
                 /* Nuklear window was closed. Handle close internally */
@@ -404,7 +413,8 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
                                 nkwnd->_internal.width = monitorInfo.rcWork.right - monitorInfo.rcWork.left;
                                 nkwnd->_internal.ws_override = 1; /* Sizing was done without nuklear beeing aware. So we need to override it */
                                 nkwnd->_internal.is_maximized = 1;
-                                SetWindowPos(wnd, NULL, 0, 0, nkwnd->_internal.width, nkwnd->_internal.height,
+                                SetWindowPos(wnd, nkwnd->always_on_top ? HWND_TOPMOST : NULL,
+                                             0, 0, nkwnd->_internal.width, nkwnd->_internal.height,
                                              SWP_NOMOVE | SWP_NOZORDER);
                         }
                 }
@@ -451,7 +461,8 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
                         cursorPos.y -= nkwnd->_internal.drag_offset.y;
                         /* Update position of out window and make sure window is in a movable state (= Restored) */
                         ShowWindow(wnd, SW_RESTORE);
-                        SetWindowPos(wnd, NULL, cursorPos.x, cursorPos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+                        SetWindowPos(wnd, nkwnd->always_on_top ? HWND_TOPMOST : NULL,
+                                     cursorPos.x, cursorPos.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
                 }
         }
                 break;
@@ -505,7 +516,7 @@ static inline void nkgdi_window_set_center(struct nkgdi_window *wnd)
         monitorInfo.cbSize = sizeof(MONITORINFO);
         if (GetMonitorInfoW(monitor, &monitorInfo)) {
                 SetWindowPos(nkgdi_window_hwnd_get(wnd),
-                             NULL,
+                             wnd->always_on_top ? HWND_TOPMOST : NULL,
                              abs(monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left - wnd->_internal.width) / 2,
                              abs(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top - wnd->_internal.height) / 2,
                              0, 0,
