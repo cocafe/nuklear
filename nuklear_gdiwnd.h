@@ -35,6 +35,8 @@ struct nkgdi_window {
 
         int close_on_focus_lose;
 
+        int update_on_foreground_only;
+
         char *font_name;
         int font_size;
         int font_weight; // FW_NORMAL/FW_BOLD/etc
@@ -321,10 +323,8 @@ void *nkgdi_window_periodic_updater(void *data)
 
                 Sleep(1000 / NKGDI_WND_UPDATE_HZ);
 
-#ifdef NKGDI_UPDATE_FOREGROUND_ONLY
-                if (GetForegroundWindow() != hwnd)
+                if (wnd->update_on_foreground_only && GetForegroundWindow() != hwnd)
                         continue;
-#endif
 
                 PostMessage(hwnd, WM_NKGDI_WND_UPDATE, WM_NKGDI_WND_MAGIC, 0);
         }
