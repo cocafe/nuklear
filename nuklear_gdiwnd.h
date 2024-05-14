@@ -33,13 +33,15 @@ struct nkgdi_window {
 
         int always_on_top;
 
+        int close_on_focus_lose;
+
         char *font_name;
         int font_size;
         int font_weight; // FW_NORMAL/FW_BOLD/etc
 
         /* Callbacks */
-        /* Called when the user or os requests a window close (return 1 to accept the reqest)*/
         nkgdi_window_func_close cb_on_close;
+        /* Called when the user or os requests a window close (return 1 to accept the reqest)*/
         /* Called each time the window content should be drawn. Here you will do your nuklear drawing code
          * but WITHOUT nk_begin and nk_end. Return 1 to keep the window open.
          */
@@ -64,6 +66,7 @@ struct nkgdi_window {
                 /* Internally used state variables */
                 int is_open;
                 int is_draggin;
+                int is_on_focus;
                 int ws_override;
                 int is_maximized;
                 POINT drag_offset;
@@ -280,6 +283,11 @@ void _nkgdi_window_update(struct nkgdi_window *wnd)
 
         /* Pass context to the nuklear gdi renderer */
         nk_gdi_render(wnd->_internal.nk_gdi_ctx, nk_rgb(0, 0, 0));
+
+        if (wnd->close_on_focus_lose && !wnd->_internal.is_on_focus) {
+                if (!wnd->cb_on_close || wnd->cb_on_close(wnd))
+                        wnd->_internal.is_open = 0;
+        }
 }
 
 // Non-blocking update, need to call in a loop outside
@@ -483,6 +491,14 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
                         nkwnd->_internal.ws_override = 1;
                 }
         }
+                break;
+
+        case WM_SETFOCUS:
+                nkwnd->_internal.is_on_focus = 1;
+                break;
+
+        case WM_KILLFOCUS:
+                nkwnd->_internal.is_on_focus = 0;
                 break;
         }
 
