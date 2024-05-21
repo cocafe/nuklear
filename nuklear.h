@@ -28083,6 +28083,20 @@ nk_property_float(struct nk_context *ctx, const char *name,
     *val = variant.value.f;
 }
 NK_API void
+nk_property_float_nolabel(struct nk_context *ctx, const char *name,
+float min, float *val, float max, float step, float inc_per_pixel)
+{
+struct nk_property_variant variant;
+    NK_ASSERT(ctx);
+    NK_ASSERT(name);
+    NK_ASSERT(val);
+
+    if (!ctx || !ctx->current || !name || !val) return;
+    variant = nk_property_variant_float(*val, min, max, step);
+    __nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT, 0);
+    *val = variant.value.f;
+    }
+NK_API void
 nk_property_double(struct nk_context *ctx, const char *name,
     double min, double *val, double max, double step, float inc_per_pixel)
 {
