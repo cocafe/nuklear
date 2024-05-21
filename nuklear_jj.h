@@ -419,6 +419,19 @@ NK_API void nk_widget_tooltip(struct nk_context *ctx, const char *tooltip)
         }
 }
 
+NK_API void nk_widget_tooltipf(struct nk_context *ctx, const char *fmt, ...)
+{
+        va_list args;
+        va_start(args, fmt);
+
+        struct nk_rect bounds = nk_widget_bounds(ctx);
+        if (nk_input_is_mouse_hovering_rect(&ctx->input, bounds)) {
+                nk_tooltipfv(ctx, fmt, args);
+        }
+
+        va_end(args);
+}
+
 NK_API nk_bool nk_button_label_disabled(struct nk_context *ctx, const char *title, int disabled)
 {
         struct nk_style_button t = ctx->style.button;
