@@ -6,10 +6,6 @@
 #include <windows.h>
 #include <winuser.h>
 
-#ifndef NKGDI_WND_UPDATE_HZ
-#define NKGDI_WND_UPDATE_HZ             (60)
-#endif
-
 #define WM_NKGDI_WND_UPDATE             (WM_USER + 60)
 #define WM_NKGDI_WND_MAGIC              (0xc0cacac0)
 
@@ -36,6 +32,7 @@ struct nkgdi_window {
         int close_on_focus_lose;
 
         int update_on_foreground_only;
+        int fps_max;
 
         char *font_name;
         int font_size;
@@ -209,6 +206,9 @@ int nkgdi_window_create(struct nkgdi_window *wnd, unsigned int width, unsigned i
         wnd->_internal.width = width;
         wnd->_internal.height = height;
 
+        if (wnd->fps_max == 0)
+                wnd->fps_max = 120;
+
         return 0;
 }
 
@@ -321,7 +321,8 @@ void *nkgdi_window_periodic_updater(void *data)
                 if (!wnd->_internal.is_open)
                         break;
 
-                Sleep(1000 / NKGDI_WND_UPDATE_HZ);
+                if (wnd->fps_max > 0)
+                        Sleep(1000 / wnd->fps_max);
 
                 if (wnd->update_on_foreground_only && GetForegroundWindow() != hwnd)
                         continue;
