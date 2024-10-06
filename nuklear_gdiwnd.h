@@ -501,6 +501,12 @@ LRESULT CALLBACK nkgdi_window_proc_run(HWND wnd, UINT msg, WPARAM wParam, LPARAM
         case WM_KILLFOCUS:
                 nkwnd->_internal.is_on_focus = 0;
                 break;
+
+        // call on losing window activation, or click outside the window
+        // case WM_ACTIVATEAPP:
+        //         printf("GetForegroundWindow: %p\n", GetForegroundWindow());
+        //         printf("_internal.window_handle: %p\n", nkwnd->_internal.window_handle);
+        //         break;
         }
 
         /* Allow nuklear to handle the message as well */
@@ -539,6 +545,12 @@ static inline void nkgdi_window_set_center(struct nkgdi_window *wnd)
                              0, 0,
                              SWP_NOSIZE | SWP_NOZORDER);
         }
+}
+
+static inline void nkgdi_window_set_focus(struct nkgdi_window *wnd)
+{
+        SetForegroundWindow(wnd->_internal.window_handle);
+        SetFocus(wnd->_internal.window_handle);
 }
 
 #endif
